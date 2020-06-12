@@ -3,6 +3,7 @@ package com.example.myapplication.utils;
 import android.content.ComponentName;
 import android.provider.Settings;
 
+import com.example.libcommon.AppGlobals;
 import com.example.libnavannotation.FragmentDestination;
 import com.example.myapplication.FixFragmentNavigator;
 import com.example.myapplication.model.Destination;

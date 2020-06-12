@@ -1,9 +1,7 @@
-package com.example.myapplication.utils;
+package com.example.libcommon;
 
-import android.app.Activity;
 import android.app.Application;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class AppGlobals {
