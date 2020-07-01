@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.myapplication.R;
 import com.example.myapplication.model.BottomBar;
@@ -85,4 +86,6 @@ public class AppBottomBar extends BottomNavigationView {
         }
         return destination.getId();
     }
+
+
 }

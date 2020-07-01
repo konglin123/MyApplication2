@@ -1,22 +1,31 @@
 package com.example.libnetwork;
 
+import android.annotation.SuppressLint;
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.example.libdatabase.CacheManager;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.IntDef;
+import androidx.arch.core.executor.ArchTaskExecutor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
-public abstract class Request<T, R extends Request> {
+public abstract class Request<T, R extends Request> implements Cloneable{
     protected String mUrl;
     protected HashMap<String, String> headers = new HashMap<>();
     protected HashMap<String, Object> params = new HashMap<>();
@@ -39,6 +48,13 @@ public abstract class Request<T, R extends Request> {
     public static final int NET_CACHE = 4;
     private Type type;
     private Class claz;
+
+    private int mCacheStrategy = NET_ONLY;
+    @IntDef({CACHE_ONLY, CACHE_FIRST, NET_CACHE, NET_ONLY})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface CacheStrategy {
+
+    }
 
     public Request(String mUrl) {
         this.mUrl = mUrl;
@@ -79,6 +95,11 @@ public abstract class Request<T, R extends Request> {
         return (R) this;
     }
 
+    public R cacheStrategy(@CacheStrategy int cacheStrategy) {
+        mCacheStrategy = cacheStrategy;
+        return (R) this;
+    }
+
 
     private Call getCall() {
         okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
@@ -97,25 +118,50 @@ public abstract class Request<T, R extends Request> {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     public void execute(final JsonCallback<T> callback) {
-        getCall().enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                ApiResponse<T> response = new ApiResponse<>();
-                response.message = e.getMessage();
-                callback.onError(response);
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                ApiResponse<T> apiResponse = parseResponse(response, callback);
-                if (apiResponse.success) {
-                    callback.onSuccess(apiResponse);
-                } else {
-                    callback.onError(apiResponse);
+        if(mCacheStrategy!=NET_ONLY){
+            ArchTaskExecutor.getIOThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                 ApiResponse<T> response=readCache();
+                 if(callback!=null){
+                     callback.onCacheSuccess(response);
+                 }
                 }
-            }
-        });
+            });
+        }
+        if(mCacheStrategy!=CACHE_ONLY) {
+            getCall().enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    ApiResponse<T> response = new ApiResponse<>();
+                    response.message = e.getMessage();
+                    callback.onError(response);
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    ApiResponse<T> apiResponse = parseResponse(response, callback);
+                    if (apiResponse.success) {
+                        callback.onSuccess(apiResponse);
+                    } else {
+                        callback.onError(apiResponse);
+                    }
+                }
+            });
+        }
+    }
+
+    private ApiResponse<T> readCache() {
+        String key=TextUtils.isEmpty(catchKey)?generateCacheKey():catchKey;
+        Object cache = CacheManager.getCache(key);
+        ApiResponse<T> result = new ApiResponse<>();
+        result.state=304;
+        result.message="缓存获取成功";
+        result.body= (T) cache;
+        result.success=true;
+        return result;
     }
 
     private ApiResponse<T> parseResponse(Response response, JsonCallback<T> callback) {
@@ -144,20 +190,46 @@ public abstract class Request<T, R extends Request> {
         } catch (Exception e) {
             message = e.getMessage();
             success = false;
+            state=0;
         }
         result.success = success;
         result.state = state;
         result.message = message;
+
+        if(mCacheStrategy!=NET_ONLY&&result.success&&result.body!=null&&result.body instanceof Serializable){
+            saveCache(result.body);
+        }
         return result;
     }
 
+    private void saveCache(T body) {
+        String key= TextUtils.isEmpty(catchKey)?generateCacheKey():catchKey;
+        CacheManager.save(key,body);
+    }
+
+    private String generateCacheKey() {
+        catchKey=UrlCreator.createUrlFromParams(mUrl,params);
+        return catchKey;
+    }
+
     public ApiResponse<T> execute() {
-        try {
-            Response response = getCall().execute();
-            ApiResponse<T> result = parseResponse(response, null);
+        if(mCacheStrategy==CACHE_ONLY){
+            return readCache();
+        }
+ 
+        if (mCacheStrategy != CACHE_ONLY) {
+            ApiResponse<T> result = null;
+            try {
+                Response response = getCall().execute();
+                result = parseResponse(response, null);
+            } catch (IOException e) {
+                e.printStackTrace();
+                if (result == null) {
+                    result = new ApiResponse<>();
+                    result.message = e.getMessage();
+                }
+            }
             return result;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return null;
     }

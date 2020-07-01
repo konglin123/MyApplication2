@@ -11,7 +11,7 @@ public class AppGlobals {
          if(sApplication==null){
              try {
                  Method method = Class.forName("android.app.ActivityThread").getDeclaredMethod("currentApplication");
-                 sApplication= (Application) method.invoke(null,null);
+                 sApplication= (Application) method.invoke(null,(Object[])null);
              } catch (Exception e) {
                  e.printStackTrace();
              }

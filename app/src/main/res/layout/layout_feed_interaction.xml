@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="feed"
+            type="com.example.myapplication.model.Feed" />
+        <import type="com.example.myapplication.utils.StringConvert"/>
+    </data>
+
+    <LinearLayout
+        android:paddingLeft="@dimen/dp_16"
+        android:paddingRight="@dimen/dp_16"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_45">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/like"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textColor="@{feed.ugc.hasLiked?@color/color_theme:@color/color_3d}"
+        android:text="@{feed.ugc.likeCount>0?StringConvert.convertFeedUgc(feed.ugc.likeCount):@string/like}"
+        android:textSize="@dimen/sp_14"
+        app:backgroundTint="@color/color_white"
+        app:icon="@{feed.ugc.hasLiked?@drawable/icon_cell_liked:@drawable/icon_cell_like}"
+        app:iconGravity="textStart"
+        app:iconPadding="@dimen/dp_4"
+        app:iconTint="@{feed.ugc.hasLiked?@color/color_theme:@color/color_3d}"
+        tools:icon="@drawable/icon_cell_like"
+        tools:iconTint="@color/color_3d"
+        tools:text="1000"
+        tools:textColor="@color/color_3d"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/diss"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="踩"
+        android:textSize="@dimen/sp_14"
+        app:backgroundTint="@color/color_white"
+        android:textColor="@{feed.ugc.hasdiss?@color/color_theme:@color/color_3d}"
+        app:icon="@{feed.ugc.hasdiss?@drawable/icon_cell_dissed:@drawable/icon_cell_diss}"
+        app:iconGravity="textStart"
+        app:iconPadding="@dimen/dp_4"
+        app:iconTint="@{feed.ugc.hasdiss?@color/color_theme:@color/color_3d}"
+        tools:icon="@drawable/icon_cell_diss"
+        tools:iconTint="@color/color_3d"
+        tools:text="1000"
+        tools:textColor="@color/color_3d"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/comment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="@{feed.ugc.commentCount>0?StringConvert.convertFeedUgc(feed.ugc.commentCount):@string/feed_comment}"
+        android:textColor="@color/color_3d"
+        android:textSize="@dimen/sp_14"
+        app:backgroundTint="@color/color_white"
+        app:cornerRadius="0dp"
+        app:icon="@drawable/icon_cell_comment"
+        app:iconGravity="textStart"
+        app:iconPadding="@dimen/dp_4"
+        app:iconTint="@color/color_3d"
+        tools:icon="@drawable/icon_cell_comment"
+        tools:iconTint="@color/color_3d"
+        tools:text="1000"
+        tools:textColor="@color/color_3d"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/share"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="@{feed.ugc.shareCount>0?StringConvert.convertFeedUgc(feed.ugc.shareCount):@string/share}"
+        android:textColor="@color/color_3d"
+        android:textSize="@dimen/sp_14"
+        app:backgroundTint="@color/color_white"
+        app:cornerRadius="0dp"
+        app:icon="@drawable/icon_cell_share"
+        app:iconGravity="textStart"
+        app:iconPadding="4dp"
+        app:iconTint="@color/color_3d"
+        tools:icon="@drawable/icon_cell_share"
+        tools:iconTint="@color/color_3d"
+        tools:text="1000"
+        tools:textColor="@color/color_3d"/>
+    </LinearLayout>
+</layout>
